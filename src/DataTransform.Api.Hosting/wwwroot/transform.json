@@ -1,0 +1,24 @@
+﻿{
+  "DatabaseOptions": {
+    "SqlConnectionString": "Server=.;Database=MusicStore;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "MongoDbConnectionString": "mongodb://localhost:27017/musicstore"
+  },
+  "TransformOptions": {
+    "Maps": [
+      {
+        "TableName": "dbo.Albums",
+        "IdentityColumnName": "AlbumId",
+        "CollectionName": "Albums",
+        "Range": [], // full if empty
+        "Fields": [ "AlbumId", "ArtistId", "AlbumArtUrl", "Created", "Price" ]
+      },
+      {
+        "TableName": "dbo.Artists",
+        "IdentityColumnName": "ArtistId",
+        "CollectionName": "Artists",
+        "Range": [], // full if empty
+        "Fields": [] // all if empty
+      }
+    ]
+  }
+}
