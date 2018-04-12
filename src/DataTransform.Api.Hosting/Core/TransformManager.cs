@@ -1,5 +1,6 @@
 ﻿using DataTransform.SharedLibrary;
 using Microsoft.Extensions.Options;
+using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,10 +13,13 @@ namespace DataTransform.Api.Hosting
     {
         private readonly TransformOptions _options;
         private readonly ITransformTask _transformTask;
+        private readonly IConnectionManager _connectionManager;
 
         public CancellationTokenSource CancellationToken { get; }
 
-        public TransformManager(IOptionsSnapshot<TransformOptions> options, ITransformTask transformTask)
+        public TransformManager(IOptionsSnapshot<TransformOptions> options, 
+            ITransformTask transformTask,
+            IConnectionManager connectionManager)
         {
             if (options == null)
             {
@@ -29,6 +33,7 @@ namespace DataTransform.Api.Hosting
 
             _options = options.Value;
             _transformTask = transformTask;
+            _connectionManager = connectionManager;
             CancellationToken = new CancellationTokenSource();
         }
 
@@ -59,8 +64,9 @@ namespace DataTransform.Api.Hosting
                     await _transformTask.InvokeAsync(context);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await _connectionManager.WsErrorLog(ex);
             }
             finally
             {

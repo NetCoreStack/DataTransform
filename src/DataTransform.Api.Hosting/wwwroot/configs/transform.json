@@ -1,6 +1,6 @@
 {
   "DatabaseOptions": {
-    "SqlConnectionString": "Server=.;Database=MusicStore;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "SqlConnectionString": "Server=.,1401;Database=MusicStore;User Id=sa;Password=P@ssword1;MultipleActiveResultSets=true",
     "MongoDbConnectionString": "mongodb://localhost:27017/musicstore"
   },
   "TransformOptions": {
@@ -9,14 +9,12 @@
         "TableName": "dbo.Albums",
         "IdentityColumnName": "AlbumId",
         "CollectionName": "Albums",
-        "Range": [],
         "Fields": [ "AlbumId", "ArtistId", "AlbumArtUrl", "Created", "Price" ]
       },
       {
         "TableName": "dbo.Artists",
         "IdentityColumnName": "ArtistId",
         "CollectionName": "Artists",
-        "Range": [],
         "Fields": []
       }
     ]
