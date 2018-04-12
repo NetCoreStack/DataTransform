@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NetCoreStack.WebSockets;
 
 namespace DataTransform.Api.Hosting
 {
@@ -17,6 +18,8 @@ namespace DataTransform.Api.Hosting
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTransformFeatures(Configuration);
+
+            services.AddNativeWebSockets<DataStreamingInvocator>();
 
             services.AddMvc();
         }
@@ -34,6 +37,8 @@ namespace DataTransform.Api.Hosting
             }
 
             app.UseStaticFiles();
+
+            app.UseNativeWebSockets();
 
             app.UseMvc(routes =>
             {

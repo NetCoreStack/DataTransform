@@ -3,26 +3,28 @@ using DataTransform.SharedLibrary;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NetCoreStack.Data.Interfaces;
+using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataTransform.Api.Hosting
 {
-    public class DbTransformTask : ITransformTask, IDisposable
+    public class DbTransformTask : ITransformTask
     {
         private readonly SqlDatabase _sourceSqlDatabase;
         private readonly IMongoDbDataContext _mongoDbDataContext;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        public bool IsShutdownRequested => _cts.IsCancellationRequested;
+        private readonly IConnectionManager _connectionManager;
 
-        public DbTransformTask(SqlDatabase sourceSqlDatabase, IMongoDbDataContext mongoDbDataContext)
+        public DbTransformTask(SqlDatabase sourceSqlDatabase, 
+            IMongoDbDataContext mongoDbDataContext,
+            IConnectionManager connectionManager)
         {
             _sourceSqlDatabase = sourceSqlDatabase;
             _mongoDbDataContext = mongoDbDataContext;
+            _connectionManager = connectionManager;
         }
 
         private long GetCount(DbTransformContext context)
@@ -58,13 +60,14 @@ namespace DataTransform.Api.Hosting
 
             do
             {
-                if (IsShutdownRequested)
+                if (context.CancellationTokenSource.IsCancellationRequested)
                 {
                     break;
                 }
 
-                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {context.IdentityColumnName} > {indexId}";
+                await _connectionManager.WsLogAsync($"TableName: {context.TableName} counts: {context.Count} record(s) processing...");
 
+                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {context.IdentityColumnName} > {indexId}";
                 List<dynamic> sqlItems = new List<dynamic>();
                 using (var connection = _sourceSqlDatabase.CreateConnection())
                 {
@@ -76,6 +79,7 @@ namespace DataTransform.Api.Hosting
                 if (itemsCount > 0)
                 {
                     await TokenizeAsync(context.CollectionName, sqlItems);
+                    await _connectionManager.WsLogAsync($"TableName: {context.TableName} Total: {context.Count} record(s) progress.");
                 }
                 indexId = rangeIndex;
 
@@ -93,42 +97,36 @@ namespace DataTransform.Api.Hosting
             long count = GetCount(context);
             try
             {
-                totalRecords = await TokenizeLoopAsync(new DbTransformTokenizeContext {
+                var tokenizedContext = new DbTransformTokenizeContext
+                {
                     Count = count,
                     CollectionName = context.CollectionName,
                     IdentityColumnName = context.IdentityColumnName,
                     BundleSize = context.BundleSize,
                     FieldPattern = context.FieldPattern,
                     TableName = context.TableName,
-                    LastIndexId = lastIndexId
-                }); 
+                    LastIndexId = lastIndexId,
+                    CancellationTokenSource = context.CancellationTokenSource
+                };
+
+                totalRecords = await TokenizeLoopAsync(tokenizedContext); 
             }
             catch (Exception ex)
             {
-                throw ex;
+                await _connectionManager.WsErrorLog(ex);
             }
             finally
             {
                 
             }
-
             sw.Stop();
-            Debug.WriteLine("=====MongoDb total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed);
+
+            await _connectionManager.WsLogAsync(string.Format("MongoDb total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
         }
 
         public async Task InvokeAsync(DbTransformContext context)
         {
             await InvokeInternal(context);
-        }
-
-        public void SendStop()
-        {
-            _cts.Cancel();
-        }
-
-        public void Dispose()
-        {
-            SendStop();
         }
     }
 }

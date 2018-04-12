@@ -9,10 +9,18 @@
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
     <PackageReference Include="NetCoreStack.Data" Version="2.0.15" />
     <PackageReference Include="NetCoreStack.Mvc" Version="2.0.15" />
+    <PackageReference Include="NetCoreStack.WebSockets" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\img\banner1.svg" />
+    <None Include="wwwroot\img\banner2.svg" />
+    <None Include="wwwroot\img\banner3.svg" />
+    <None Include="wwwroot\img\banner4.svg" />
   </ItemGroup>
 
   <ItemGroup>

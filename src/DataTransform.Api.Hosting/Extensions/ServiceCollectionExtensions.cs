@@ -21,12 +21,12 @@ namespace DataTransform.Api.Hosting
 
             services.Configure<TransformOptions>(configuration.GetSection(nameof(TransformOptions)));
 
-            services.AddScoped<TransformManager>();
             services.AddScoped<SqlDatabase>();
             services.AddScoped<IMongoDbDataContext, MongoDbContext>();
             services.AddScoped<IDatabasePreCommitFilter, DefaultDatabasePreCommitFilter>();
 
             services.AddScoped<ITransformTask, DbTransformTask>();
+            services.AddScoped<TransformManager>();
 
             services.TryAddSingleton<ICollectionNameSelector, DefaultCollectionNameSelector>();
             services.TryAddSingleton<IDataContextConfigurationAccessor, DefaultDataContextConfigurationAccessor>();
@@ -34,7 +34,7 @@ namespace DataTransform.Api.Hosting
 
         public static void AddTransformConfigFile(this IConfigurationBuilder builder, IHostingEnvironment hostingEnvironment)
         {
-            HostingConstants.TransformJsonFileFullPath = Path.Combine(hostingEnvironment.WebRootPath, "transform.json");
+            HostingConstants.TransformJsonFileFullPath = Path.Combine(hostingEnvironment.WebRootPath, "configs", "transform.json");
             builder.AddJsonFile(HostingConstants.TransformJsonFileFullPath, optional: false, reloadOnChange: true);
         }
     }

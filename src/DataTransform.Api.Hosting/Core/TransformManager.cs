@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using static DataTransform.SharedLibrary.HostingConstants;
 
 namespace DataTransform.Api.Hosting
 {
@@ -10,6 +12,8 @@ namespace DataTransform.Api.Hosting
     {
         private readonly TransformOptions _options;
         private readonly ITransformTask _transformTask;
+
+        public CancellationTokenSource CancellationToken { get; }
 
         public TransformManager(IOptionsSnapshot<TransformOptions> options, ITransformTask transformTask)
         {
@@ -25,12 +29,11 @@ namespace DataTransform.Api.Hosting
 
             _options = options.Value;
             _transformTask = transformTask;
+            CancellationToken = new CancellationTokenSource();
         }
 
         public async Task TransformAsync()
         {
-            await Task.CompletedTask;
-
             List<DbTransformContext> transformContexts = new List<DbTransformContext>();
             foreach (var map in _options.Maps)
             {
@@ -41,27 +44,28 @@ namespace DataTransform.Api.Hosting
                     CollectionName = map.CollectionName,
                     FieldPattern = fieldsPattern,
                     IdentityColumnName = map.IdentityColumnName,
-                    TableName = map.TableName
+                    TableName = map.TableName,
+                    CancellationTokenSource = CancellationToken
                 };
 
                 transformContexts.Add(context);
             }
 
-            foreach (var context in transformContexts)
+            SharedSemaphoreSlim.Wait();
+            try
             {
-                await _transformTask.InvokeAsync(context);
+                foreach (var context in transformContexts)
+                {
+                    await _transformTask.InvokeAsync(context);
+                }
             }
-
-            //List<dynamic> sqlItems = new List<dynamic>();
-            //using (var connection = _sqlDatabase.CreateConnection())
-            //{
-            //    sqlItems = connection.Query("SELECT * FROM Albums").AsList();
-            //}
-
-            //var items = sqlItems.Select(p => ((IDictionary<string, object>)p).ToBsonDocument()).ToList();
-            //var collection = _mongoDbDataContext.MongoDatabase.GetCollection<BsonDocument>("Albums");            
-
-            //collection.InsertMany(items);
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                SharedSemaphoreSlim.Release();
+            }
         }
     }
 }

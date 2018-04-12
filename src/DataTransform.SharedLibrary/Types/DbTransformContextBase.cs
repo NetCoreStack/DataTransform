@@ -1,4 +1,6 @@
-﻿namespace DataTransform.SharedLibrary
+﻿using System.Threading;
+
+namespace DataTransform.SharedLibrary
 {
     public abstract class DbTransformContextBase
     {
@@ -10,5 +12,6 @@
         public string CollectionName { get; set; }
         public string IdentityColumnName { get; set; }
         public int BundleSize { get; set; } = 2000;
+        public CancellationTokenSource CancellationTokenSource { get; set; }
     }
 }
