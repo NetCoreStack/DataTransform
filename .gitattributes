@@ -61,3 +61,8 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+# linquist
+wwwroot/vendor/* linguist-vendored=true
+wwwroot/css/* linguist-vendored=true
+wwwroot/fonts/* linguist-vendored=true
