@@ -21,7 +21,7 @@ namespace DataTransform.Api.Hosting
 
         public static string CreateCountScript(this TransformDescriptor descriptor)
         {
-            return string.Format("SELECT COUNT(*) FROM {0}", descriptor.TableName);
+            return string.Format("SELECT COUNT(*) FROM {0} WHERE {1} > 0", descriptor.TableName, descriptor.IdentityColumnName);
         }
     }
 }

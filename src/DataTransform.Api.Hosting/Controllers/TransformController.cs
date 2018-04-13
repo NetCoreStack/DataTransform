@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using NetCoreStack.WebSockets;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,10 +15,12 @@ namespace DataTransform.Api.Hosting.Controllers
     public class TransformController : Controller
     {
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IConnectionManager _connectionManager;
 
-        public TransformController(IHostingEnvironment hostingEnvironment)
+        public TransformController(IHostingEnvironment hostingEnvironment, IConnectionManager connectionManager)
         {
             _hostingEnvironment = hostingEnvironment;
+            _connectionManager = connectionManager;
         }
 
         [HttpGet(nameof(FileTree))]
@@ -38,13 +42,20 @@ namespace DataTransform.Api.Hosting.Controllers
         }
         
         [HttpGet(nameof(GetContent))]
-        public IActionResult GetContent([FromQuery] string filename)
+        public async Task<IActionResult> GetContent([FromQuery] string filename)
         {
             var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", filename);
             if (System.IO.File.Exists(filePath))
             {
-                var content = System.IO.File.ReadAllText(filePath);
-                return Json(new { data = content });
+                try
+                {
+                    var content = System.IO.File.ReadAllText(filePath);
+                    return Json(new { data = content });
+                }
+                catch (Exception ex)
+                {
+                    await _connectionManager.WsErrorLog(ex);
+                }
             }
 
             return NotFound();            

@@ -53,7 +53,9 @@ namespace DataTransform.Api.Hosting
 
                 await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} counts: {context.Count} record(s) processing...");
 
-                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {identityColumnName} > {indexId}";
+                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} " +
+                    $"WHERE {identityColumnName} > {indexId} ORDER BY {identityColumnName} ASC";
+
                 List<dynamic> sqlItems = new List<dynamic>();
                 using (var connection = _sourceSqlDatabase.CreateConnection())
                 {
