@@ -1,6 +1,6 @@
 ### SQL to MongoDb Transform Tool for .NET Core
 
-### MongoDb Database 
+### MongoDb Database (v3.6+)
 
     docker volume create --name=mongodata
 

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,12 +13,10 @@ namespace DataTransform.Api.Hosting.Controllers
     public class TransformController : Controller
     {
         private readonly IHostingEnvironment _hostingEnvironment;
-        private readonly IOptionsSnapshot<TransformOptions> _options;
 
-        public TransformController(IHostingEnvironment hostingEnvironment, IOptionsSnapshot<TransformOptions> options)
+        public TransformController(IHostingEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
-            _options = options;
         }
 
         [HttpGet(nameof(FileTree))]
@@ -28,7 +25,7 @@ namespace DataTransform.Api.Hosting.Controllers
             var tree = new JsTreeDataModel
             {
                 Text = "Files",
-                Id = "Files",
+                Id = "#",
                 Opened = "true",
                 Type = "root"
             };
@@ -43,11 +40,10 @@ namespace DataTransform.Api.Hosting.Controllers
         [HttpGet(nameof(GetContent))]
         public IActionResult GetContent([FromQuery] string filename)
         {
-            List<TransformDescriptor> maps = _options.Value.Maps.ToList();
-
-            if (filename == "transform.json")
+            var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", filename);
+            if (System.IO.File.Exists(filePath))
             {
-                var content = System.IO.File.ReadAllText(HostingConstants.TransformJsonFileFullPath);
+                var content = System.IO.File.ReadAllText(filePath);
                 return Json(new { data = content });
             }
 
@@ -57,41 +53,79 @@ namespace DataTransform.Api.Hosting.Controllers
         [HttpPost(nameof(SaveConfig))]
         public IActionResult SaveConfig([FromBody] SaveConfigModel model)
         {
-            if (model.ConfigFileName == "transform.json")
+            if (model == null)
             {
-                System.IO.File.WriteAllText(HostingConstants.TransformJsonFileFullPath, model.Content);
-            }            
+                return BadRequest();
+            }
+
+            var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", model.ConfigFileName);
+            System.IO.File.WriteAllText(filePath, model.Content);
 
             return Json(new { success = true });
         }
 
         [HttpGet(nameof(Download))]
-        public IActionResult Download()
+        public IActionResult Download([FromQuery] string filename)
         {
-            return File(System.IO.File.ReadAllBytes(HostingConstants.TransformJsonFileFullPath), "application/json", "transform.json");
+            var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", filename);
+            if (System.IO.File.Exists(filePath))
+            {
+                return File(System.IO.File.ReadAllBytes(filePath), "application/json", filename);
+            }
+
+            return NotFound();
         }
 
-        [HttpPost(nameof(SaveTransformFile))]
-        public IActionResult SaveTransformFile([FromBody] SaveFileModel model)
+        [HttpPost(nameof(CreateTransformFile))]
+        public IActionResult CreateTransformFile([FromBody] SaveFileModel model)
         {
+            if (model == null)
+            {
+                return BadRequest();
+            }
+
+            var filename = model.Filename;
+            var extension = Path.GetExtension(filename);
+            if (string.IsNullOrEmpty(extension))
+            {
+                filename = filename + ".json";
+            }
+
+            var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", filename);
+            var content = string.Empty;
+
+            // Rename file name
+            if (!string.IsNullOrEmpty(model.OriginFilename) && filename != model.OriginFilename)
+            {
+                if (System.IO.File.Exists(filePath))
+                {
+                    return BadRequest("File exist");
+                }
+
+                var originFilePath = Path.Combine(_hostingEnvironment.WebRootPath, "configs", model.OriginFilename);
+                System.IO.File.Move(originFilePath, filePath);
+                return Json(new { success = true });
+            }
+
+            if (System.IO.File.Exists(filePath))
+            {
+                // 
+            }
+            else
+            {
+                System.IO.File.Create(filePath);
+            }
 
             return Json(new { success = true });
         }
 
-        [HttpGet(nameof(GetOptions))]
-        public IActionResult GetOptions()
-        {
-            List<TransformDescriptor> maps = _options.Value.Maps.ToList();
-            return Json(maps);
-        }
-
         [HttpGet(nameof(StartTransformAsync))]
-        public async Task<IActionResult> StartTransformAsync()
+        public async Task<IActionResult> StartTransformAsync([FromQuery] string filename)
         {
-            var transformManager = HttpContext.RequestServices.GetService<TransformManager>();
+            var transformManager = HttpContext.RequestServices.GetRequiredService<TransformManager>();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Factory.StartNew(async () => await transformManager.TransformAsync(), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(async () => await transformManager.TransformAsync(filename), TaskCreationOptions.LongRunning);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             await Task.CompletedTask;

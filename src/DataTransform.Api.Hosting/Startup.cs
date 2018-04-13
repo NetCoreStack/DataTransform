@@ -17,9 +17,9 @@ namespace DataTransform.Api.Hosting
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransformFeatures(Configuration);
-
             services.AddNativeWebSockets<DataStreamingInvocator>();
+
+            services.AddTransformFeatures();
 
             services.AddMvc();
         }

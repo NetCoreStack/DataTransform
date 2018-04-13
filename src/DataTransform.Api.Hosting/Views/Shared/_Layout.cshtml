@@ -15,7 +15,7 @@
     <link href="~/css/site.css" rel="stylesheet">
     <script type="text/javascript">
         var require = {
-            "urlArgs": "bust=" + (new Date()).getTime(),
+            // "urlArgs": "bust=" + (new Date()).getTime(),
             "shim": {
                 "jquery": {
                     "exports": "$"
@@ -51,6 +51,7 @@
                 "websocket": "vendor/websocket/reconnecting-websocket.min",
                 "toastr": "vendor/toastr/toastr.min",
                 "clipboard": "vendor/clipboard/clipboard.min",
+                "logger": "vendor/logger/logger",
             }
         };
     </script>
@@ -81,8 +82,11 @@
                         style="display:none;">
                     <i class="fa fa-pencil-square-o"></i>
                 </button>
-                <button type="button" class="sidebar-actions" title="Run" data-bind="click: run">
+                <button type="button" class="sidebar-actions" title="Run" data-bind="click: run; enable: readyForTask()">
                     <i class="fa fa-bolt"></i>
+                </button>
+                <button type="button" class="sidebar-actions" data-bind="visible: !readyForTask()">
+                    <i class="fa fa-spinner fa-spin"></i>
                 </button>
             </div>
         </div>

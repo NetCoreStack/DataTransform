@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using NetCoreStack.Data.Interfaces;
+﻿using NetCoreStack.Data.Interfaces;
 
 namespace DataTransform.Api.Hosting
 {
@@ -9,10 +8,10 @@ namespace DataTransform.Api.Hosting
         public int? CommandTimeout { get; }
         public string MongoDbConnectionString { get; }
 
-        public DefaultDataContextConfigurationAccessor(IOptions<DatabaseOptions> options)
+        public DefaultDataContextConfigurationAccessor(TransformOptions options)
         {
-            SqlConnectionString = options.Value.SqlConnectionString;
-            MongoDbConnectionString = options.Value.MongoDbConnectionString;
+            SqlConnectionString = options.SqlConnectionString;
+            MongoDbConnectionString = options.MongoDbConnectionString;
             CommandTimeout = null;
         }
     }

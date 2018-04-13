@@ -11,7 +11,7 @@ namespace DataTransform.Api.Tests
         public async Task TransformAsyncTests()
         {
             var transformManager = ApplicationServices.GetService<TransformManager>();
-            await transformManager.TransformAsync();
+            await transformManager.TransformAsync("transform.json");
             Assert.True(true);
         }
     }

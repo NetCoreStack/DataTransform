@@ -14,7 +14,7 @@ namespace DataTransform.Api.Hosting
             WebHost.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((context, builder) =>
             {
-                builder.AddTransformConfigFile(context.HostingEnvironment);
+                // builder.AddTransformConfigFile(context.HostingEnvironment);
 
             }).UseStartup<Startup>().Build();
     }

@@ -30,11 +30,10 @@ namespace DataTransform.Api.Tests
             services.AddSingleton(loggerFactory);
             
             var builder = new ConfigurationBuilder();
-            builder.AddTransformConfigFile(HostingEnvironment);
 
             var config = builder.Build();
 
-            services.AddTransformFeatures(config);
+            services.AddTransformFeatures();
 
             ApplicationServices = services.BuildServiceProvider();
         }

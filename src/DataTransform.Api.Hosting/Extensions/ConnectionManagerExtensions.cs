@@ -1,4 +1,5 @@
-﻿using NetCoreStack.WebSockets;
+﻿using Microsoft.AspNetCore.Routing;
+using NetCoreStack.WebSockets;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
@@ -23,6 +24,17 @@ namespace DataTransform.Api.Hosting
             {
                 Command = WebSocketCommands.DataSend,
                 Value = new { resultState = "error", message = ex.Message },
+                MessageType = WebSocketMessageType.Text
+            });
+        }
+
+        public static async Task WsTransformCompleted(this IConnectionManager connectionManager)
+        {
+            await connectionManager.BroadcastAsync(new WebSocketMessageContext
+            {
+                Command = WebSocketCommands.DataSend,
+                Header = new RouteValueDictionary(new { completed = true }),
+                Value = new { resultState = "completed", message = "Transform completed" },
                 MessageType = WebSocketMessageType.Text
             });
         }

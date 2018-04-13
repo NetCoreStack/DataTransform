@@ -8,6 +8,7 @@
         "knockout-jsoneditor",
         "websocket",
         "toastr",
+        "logger",
         "app/utils",
         "app/main"
     ],
@@ -20,6 +21,7 @@
         editor,
         websocket,
         toastr,
+        logger,
         utils,
         webcli
     ) {
@@ -55,14 +57,18 @@
             self.selectedTreeNode = ko.observable();
             self.consoleLogger = ko.observableArray();
             self.progress = ko.observable();
+            self.readyForTask = ko.observable(true);
             self.showModal = ko.observable(false);
             self.modalMode = ko.observable("create");
             self.modalComponentName = ko.observable("empty");
             self.modalComponentTitle = ko.observable("");
             self.modalContext = ko.computed(function () {
                 var filename = self.selectedTreeNode();
+                if (self.modalMode() == "create") {
+                    filename = "";
+                }
                 return {
-                    filename: filename
+                    originFilename: filename
                 };
             }, this);
             self.createTransformFile = function () {
@@ -112,11 +118,12 @@
                 self.modalComponentTitle(title);
                 self.showModal(true);
             };
-            self.run = function () {
+            self.run = function (vm, sender) {
+                self.readyForTask(false);
                 var jqXHR = ($.ajax({
                     type: "GET",
                     cache: false,
-                    url: "/api/transform/starttransformasync",
+                    url: "/api/transform/starttransformasync?filename=" + self.selectedTreeNode(),
                     success: function (data, textStatus, jqXHR) { },
                     error: function (response) { }
                 }).always = function (data, textStatus, jqXHR) {
@@ -163,6 +170,12 @@
             self.refreshTree = function () {
                 $jsTree.jstree(true).refresh();
             };
+            self.showModal.subscribe(function (newValue) {
+                if (!newValue) {
+                    self.modalComponentName("empty");
+                    self.modalComponentTitle("");
+                }
+            });
         }
 
         var vm = new PageViewModel();
@@ -176,7 +189,14 @@
             "/ws?connectionId=" +
             new Date().getTime();
 
-        var ws = new WebSocket(currentWsUrl);
+        var WebSocketCommands = {
+            Connect: 1,
+            DataSend: 2,
+            Handshake: 4,
+            All: 7
+        }
+
+        var ws = new websocket(currentWsUrl);
 
         send = function (data) {
             ws.send(data);
@@ -185,7 +205,17 @@
         ws.onmessage = function (msg) {
             var payload = JSON.parse(msg.data);
             if (payload.Command !== 4) {
-                var $toast = toastr[payload.Value.resultState](payload.Value.message, { closeButton: true, positionClass: "toast-bottom-right" });
+                // var $toast = toastr[payload.Value.resultState](payload.Value.message, { closeButton: true, positionClass: "toast-bottom-right" });
+                var logColor = undefined;
+                if (payload.Value.resultState == "error") {
+                    logColor = "#ff3e3e";
+                }
+
+                if (payload.Value.resultState == "completed") {
+                    vm.readyForTask(true);
+                }
+
+                Logger.print(payload.Value.message, logColor);
             }
         };
 
@@ -202,6 +232,7 @@
             var type = context.type;
 
             vm.selectedTreeNode(id);
+            Logger.print("Selected configuration file: " + vm.selectedTreeNode());
 
             var url = "/api/transform/getcontent" + "?filename=" + encodeURIComponent(id);
 
@@ -215,5 +246,8 @@
         });
 
         window.consoleWs = ws;
+
+        Logger.toggle();
+        Logger.print("Window is loaded.");
     }
 );

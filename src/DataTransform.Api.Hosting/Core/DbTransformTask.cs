@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using DataTransform.SharedLibrary;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NetCoreStack.Data.Interfaces;
@@ -51,7 +50,7 @@ namespace DataTransform.Api.Hosting
             }
         }
 
-        private async Task<int> TokenizeLoopAsync(DbTransformTokenizeContext context)
+        private async Task<int> TokenizeLoopAsync(DbTransformContext context)
         {
             int take = context.BundleSize;
             object indexId = context.LastIndexId;
@@ -65,7 +64,7 @@ namespace DataTransform.Api.Hosting
                     break;
                 }
 
-                await _connectionManager.WsLogAsync($"TableName: {context.TableName} counts: {context.Count} record(s) processing...");
+                await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} counts: {context.Count} record(s) processing...");
 
                 var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {context.IdentityColumnName} > {indexId}";
                 List<dynamic> sqlItems = new List<dynamic>();
@@ -79,7 +78,7 @@ namespace DataTransform.Api.Hosting
                 if (itemsCount > 0)
                 {
                     await TokenizeAsync(context.CollectionName, sqlItems);
-                    await _connectionManager.WsLogAsync($"TableName: {context.TableName} Total: {context.Count} record(s) progress.");
+                    await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} total: {context.Count} record(s) progressed.");
                 }
                 indexId = rangeIndex;
 
@@ -97,19 +96,9 @@ namespace DataTransform.Api.Hosting
             long count = GetCount(context);
             try
             {
-                var tokenizedContext = new DbTransformTokenizeContext
-                {
-                    Count = count,
-                    CollectionName = context.CollectionName,
-                    IdentityColumnName = context.IdentityColumnName,
-                    BundleSize = context.BundleSize,
-                    FieldPattern = context.FieldPattern,
-                    TableName = context.TableName,
-                    LastIndexId = lastIndexId,
-                    CancellationTokenSource = context.CancellationTokenSource
-                };
-
-                totalRecords = await TokenizeLoopAsync(tokenizedContext); 
+                context.Count = count;
+                context.LastIndexId = lastIndexId;
+                totalRecords = await TokenizeLoopAsync(context); 
             }
             catch (Exception ex)
             {
@@ -121,7 +110,7 @@ namespace DataTransform.Api.Hosting
             }
             sw.Stop();
 
-            await _connectionManager.WsLogAsync(string.Format("MongoDb total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
+            await _connectionManager.WsLogAsync(string.Format("Transformed total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
         }
 
         public async Task InvokeAsync(DbTransformContext context)

@@ -5,51 +5,30 @@ define(["knockout", "toastr", "app/utils", "app/main"], function (
     webcli
 ) {
     function AddFileModel(params) {
+        var self = this;
 
-        this.filename = ko.observable();
+        var originFilename = "";
+        if (params && params.context) {
+            originFilename = params.context().originFilename;
+        }
+        
+        this.filename = ko.observable(originFilename);
 
         this.submit = function () {
-            var method = this.method();
-            var isFileResult = this.isFileResult();
-            if (!method) {
-                toastr["error"]("Http method required.");
-                return;
-            }
-
-            if (isFileResult) {
-                if (document.getElementById("file").files.length == 0) {
-                    toastr["error"]("Select a file.");
-                    return;
-                }
-            }
-
-            var endpoint = this.endpoint();
-            if (!endpoint || (!isFileResult && method == "GET" && endpoint == "/")) {
-                toastr["error"]("Endpoint invalid.");
-                return;
-            }
-
-            var formData = new FormData();
-            utils.objectToFormData(JSON.parse(), formData);
-
-            var file = $("#file");
-            if (file.length > 0) {
-                var fileInput = file[0].files[0];
-                formData.append("file", fileInput);
-            }
 
             var ajaxOptions = {
                 type: "POST",
                 cache: false,
                 contentType: "application/json",
-                data: ko.toJSON(this),
-                url: "/api/transform/savetransformfile",
-                beforeSend: function () { },
+                data: JSON.stringify({ originFilename: originFilename, filename: self.filename() }),
+                url: "/api/transform/createtransformfile",
                 success: function (data, textStatus, jqXHR) {
                     toastr["success"]("Saved...");
                     webcli.refreshTree();
                 },
-                error: function (response) { }
+                error: function (response) {
+                    toastr["error"](response.responseText);
+                }
             };
 
             var jqXHR = ($.ajax(ajaxOptions).always = function (
@@ -67,6 +46,7 @@ define(["knockout", "toastr", "app/utils", "app/main"], function (
     return {
         viewModel: {
             createViewModel: function (params, componentInfo) {
+                console.log("CREATE VIEW MODEL", params.context());
                 return new AddFileModel(params);
             }
         }
