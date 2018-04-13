@@ -6,6 +6,24 @@ namespace DataTransform.Api.Hosting
 {
     public static class MongoDbQueryHelper
     {
+        public static object GetLastId(this BsonDocument document, string identityColumnName)
+        {
+            var identityValue = document[identityColumnName];
+
+            if (identityValue.IsString)
+            {
+                return identityValue.AsString;
+            }
+            else if (identityValue.IsInt32)
+            {
+                return identityValue.AsInt32;
+            }
+            else
+            {
+                return identityValue.AsInt64;
+            }
+        }
+
         public static object GetLatestId(this IMongoDatabase mongoDatabase, string collectionName, string identityColumnName)
         {
             var collection = mongoDatabase.GetOrCreateCollection(collectionName);
@@ -17,20 +35,7 @@ namespace DataTransform.Api.Hosting
                 return 0;
             }
 
-            var identityValue = item[identityColumnName];
-
-            if (identityValue.IsString)
-            {
-                return identityValue.AsString;
-            }
-            else if(identityValue.IsInt32)
-            {
-                return identityValue.AsInt32;
-            }
-            else
-            {
-                return identityValue.AsInt64;
-            }
+            return item.GetLastId(identityColumnName);
         }
 
         public static IMongoCollection<BsonDocument> GetOrCreateCollection(this IMongoDatabase mongoDatabase, string collectionName)

@@ -35,27 +35,14 @@ namespace DataTransform.Api.Hosting
             }
         }
 
-        private async Task TokenizeAsync(string collectionName, List<dynamic> items)
-        {
-            if (items.Any())
-            {
-                var collection = MongoDbQueryHelper.GetOrCreateCollection(_mongoDbDataContext.MongoDatabase, collectionName);
-
-                var bsonList = items.Select(p => ((IDictionary<string, object>)p).ToBsonDocument()).ToList();
-
-                await collection.InsertManyAsync(bsonList, new InsertManyOptions
-                {
-                    IsOrdered = false
-                });
-            }
-        }
-
         private async Task<int> TokenizeLoopAsync(DbTransformContext context)
         {
             int take = context.BundleSize;
             object indexId = context.LastIndexId;
             int totalIndices = 0;
-            object rangeIndex = 0;
+
+            var collectionName = context.CollectionName;
+            var identityColumnName = context.IdentityColumnName;
 
             do
             {
@@ -66,7 +53,7 @@ namespace DataTransform.Api.Hosting
 
                 await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} counts: {context.Count} record(s) processing...");
 
-                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {context.IdentityColumnName} > {indexId}";
+                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} WHERE {identityColumnName} > {indexId}";
                 List<dynamic> sqlItems = new List<dynamic>();
                 using (var connection = _sourceSqlDatabase.CreateConnection())
                 {
@@ -77,10 +64,24 @@ namespace DataTransform.Api.Hosting
                 totalIndices += itemsCount;
                 if (itemsCount > 0)
                 {
-                    await TokenizeAsync(context.CollectionName, sqlItems);
-                    await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} total: {context.Count} record(s) progressed.");
+                    var bsonList = sqlItems.Select(p => ((IDictionary<string, object>)p).ToBsonDocument()).ToList();
+                    var lastItem = bsonList.LastOrDefault();
+                    indexId = lastItem.GetLastId(identityColumnName);
+
+                    var collection = MongoDbQueryHelper.GetOrCreateCollection(_mongoDbDataContext.MongoDatabase, collectionName);
+
+                    await collection.InsertManyAsync(bsonList, new InsertManyOptions
+                    {
+                        IsOrdered = false
+                    });
+
+                    await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} total: {totalIndices} record(s) progressed.");
                 }
-                indexId = rangeIndex;
+
+                if (totalIndices == 0)
+                {
+                    break;
+                }
 
             } while (totalIndices < context.Count);
 
