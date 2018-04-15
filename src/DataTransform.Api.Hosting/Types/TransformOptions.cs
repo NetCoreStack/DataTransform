@@ -9,6 +9,11 @@ namespace DataTransform.Api.Hosting
 
         public string MongoDbConnectionString { get; set; }
 
+        // case insensitive index 
+        // https://docs.mongodb.com/manual/core/index-case-insensitive/
+        // Collation settings
+        public string Locale { get; set; }
+
         public TransformOptions Value => this;
 
         public IEnumerable<TransformDescriptor> Maps { get; set; }

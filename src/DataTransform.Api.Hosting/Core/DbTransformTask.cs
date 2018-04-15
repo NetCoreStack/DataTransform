@@ -86,7 +86,7 @@ namespace DataTransform.Api.Hosting
                     var lastItem = bsonList.LastOrDefault();
                     indexId = lastItem.GetLastId(identityColumnName);
 
-                    var collection = MongoDbQueryHelper.GetOrCreateCollection(_mongoDbDataContext.MongoDatabase, collectionName);
+                    var collection = MongoDbQueryHelper.GetOrCreateCollection(_mongoDbDataContext.MongoDatabase, collectionName, context.Collation);
 
                     await collection.InsertManyAsync(bsonList, new InsertManyOptions
                     {
@@ -106,38 +106,33 @@ namespace DataTransform.Api.Hosting
             return totalIndices;
         }
 
-        private async Task InvokeInternal(DbTransformContext context)
+        public async Task InvokeAsync()
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             int totalRecords = 0;
-            object lastIndexId = MongoDbQueryHelper.GetLatestId(_mongoDbDataContext.MongoDatabase, context.CollectionName, context.IdentityColumnName);
-            long count = GetCount(context);
-            try
-            {
-                context.Count = count;
-                context.LastIndexId = lastIndexId;
-                totalRecords = await TokenizeLoopAsync(context); 
-            }
-            catch (Exception ex)
-            {
-                await _connectionManager.WsErrorLog(ex);
-            }
-            finally
-            {
-                
-            }
-            sw.Stop();
 
-            await _connectionManager.WsLogAsync(string.Format("Transformed total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
-        }
-
-        public async Task InvokeAsync()
-        {
             foreach (var context in DbTransformContexts)
-            {
-                await InvokeInternal(context);
+            {   
+                object lastIndexId = MongoDbQueryHelper.GetLatestId(_mongoDbDataContext.MongoDatabase, context);
+                long count = GetCount(context);
+                try
+                {
+                    context.Count = count;
+                    context.LastIndexId = lastIndexId;
+                    totalRecords += await TokenizeLoopAsync(context);
+                }
+                catch (Exception ex)
+                {
+                    await _connectionManager.WsErrorLog(ex);
+                }
+                finally
+                {
+                }
             }
+
+            sw.Stop();
+            await _connectionManager.WsLogAsync(string.Format("Transformed total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
         }
     }
 }

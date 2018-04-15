@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -10,6 +10,12 @@ namespace DataTransform.Api.Hosting
         {
             List<DbTransformContext> transformContexts = new List<DbTransformContext>();
 
+            Collation collation = null;
+            if (!string.IsNullOrEmpty(options.Locale))
+            {
+                collation = new Collation(options.Locale, strength: CollationStrength.Secondary);
+            }
+            
             foreach (var map in options.Maps)
             {
                 var context = new DbTransformContext
@@ -20,7 +26,8 @@ namespace DataTransform.Api.Hosting
                     FieldPattern = fieldsPattern,
                     IdentityColumnName = map.IdentityColumnName,
                     TableName = map.TableName,
-                    CancellationTokenSource = cancellationToken
+                    CancellationTokenSource = cancellationToken,
+                    Collation = collation
                 };
 
                 transformContexts.Add(context);
