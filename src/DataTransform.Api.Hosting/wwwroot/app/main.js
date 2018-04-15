@@ -67,7 +67,7 @@
             variant: "small",
             stripes: true
           },
-          multiple: false
+          multiple: true
         },
         types: {
           root: {
@@ -76,7 +76,7 @@
           },
           default: { icon: "glyphicon glyphicon-flash" }
         },
-        plugins: ["state", "types", "unique", "themes", "ui"]
+        plugins: [ "checkbox", "state", "types", "unique", "themes", "ui"]
       })
       .on("changed.jstree", function(e, data) {
         if (data.node) {
@@ -98,9 +98,11 @@
       });
 
     webcli.refreshTree = function() {
-      $("#tree")
-        .jstree(true)
-        .refresh();
+      $("#tree").jstree(true).refresh();
+    };
+
+    webcli.getSelected = function () {
+        $("#tree").jstree(true).get_selected();
     };
 
     return webcli;

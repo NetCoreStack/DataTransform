@@ -20,7 +20,7 @@ namespace DataTransform.Api.Hosting
                     {
                         Text = fi.Name,
                         Id = fi.Name,
-                        Icon = "file file" + extension,
+                        Icon = "file file-js",
                         Type = "file"
                     });
                 }

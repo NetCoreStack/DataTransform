@@ -1,10 +1,12 @@
-﻿using DataTransform.SharedLibrary;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DataTransform.Api.Hosting
 {
     public interface ITransformTask
     {
-        Task InvokeAsync(DbTransformContext context);
+        List<DbTransformContext> DbTransformContexts { get; }
+
+        Task InvokeAsync();
     }
 }

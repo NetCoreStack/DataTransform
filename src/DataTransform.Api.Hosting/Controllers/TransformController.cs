@@ -131,12 +131,17 @@ namespace DataTransform.Api.Hosting.Controllers
         }
 
         [HttpGet(nameof(StartTransformAsync))]
-        public async Task<IActionResult> StartTransformAsync([FromQuery] string filename)
+        public async Task<IActionResult> StartTransformAsync([FromQuery] string[] files)
         {
+            if (files == null || !files.Any())
+            {
+                return BadRequest();
+            }
+
             var transformManager = HttpContext.RequestServices.GetRequiredService<TransformManager>();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Factory.StartNew(async () => await transformManager.TransformAsync(filename), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(async () => await transformManager.TransformAsync(files), TaskCreationOptions.LongRunning);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             await Task.CompletedTask;

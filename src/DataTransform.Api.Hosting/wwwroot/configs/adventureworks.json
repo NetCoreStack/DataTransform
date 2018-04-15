@@ -1,0 +1,20 @@
+{
+  "TransformOptions": {
+    "SqlConnectionString": "Server=localhost,1401;Database=AdventureWorks2016;User ID=sa;Password=P@ssword1;MultipleActiveResultSets=true",
+    "MongoDbConnectionString": "mongodb://localhost:27017/AdventureWorks",
+    "Maps": [
+      {
+        "TableName": "Production.Product",
+        "IdentityColumnName": "ProductID",
+        "CollectionName": "Product",
+        "Fields": []
+      },
+      {
+        "TableName": "Person.Person",
+        "IdentityColumnName": "BusinessEntityID",
+        "CollectionName": "Person",
+        "Fields": []
+      }
+    ]
+  }
+}

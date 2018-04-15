@@ -6,7 +6,7 @@
 
     docker run -it -v mongodata:/data/db -p 27017:27017 -d mongo
 
-### MSSQL Linux Database 
+### MSSQL Linux Database (Default MusicStore)
 
     docker build -t localsql .
 

@@ -12,6 +12,8 @@ namespace DataTransform.Api.Hosting
 
             services.TryAddSingleton<ICollectionNameSelector, DefaultCollectionNameSelector>();
 
+            services.AddSingleton<TransformTaskFactory>();
+
             services.AddSingleton<TransformManager>();
         }
     }

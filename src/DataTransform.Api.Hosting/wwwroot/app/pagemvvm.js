@@ -120,10 +120,14 @@
             };
             self.run = function (vm, sender) {
                 self.readyForTask(false);
+
+                var selectedConfigFiles = $("#tree").jstree(true).get_selected();
+                var queryString = utils.toQueryString(selectedConfigFiles, "files");
+
                 var jqXHR = ($.ajax({
                     type: "GET",
                     cache: false,
-                    url: "/api/transform/starttransformasync?filename=" + self.selectedTreeNode(),
+                    url: "/api/transform/starttransformasync?" + queryString,
                     success: function (data, textStatus, jqXHR) { },
                     error: function (response) { }
                 }).always = function (data, textStatus, jqXHR) {

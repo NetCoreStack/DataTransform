@@ -1,12 +1,15 @@
 ﻿using Dapper;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using NetCoreStack.Data;
+using NetCoreStack.Data.Context;
 using NetCoreStack.Data.Interfaces;
 using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataTransform.Api.Hosting
@@ -15,15 +18,28 @@ namespace DataTransform.Api.Hosting
     {
         private readonly SqlDatabase _sourceSqlDatabase;
         private readonly IMongoDbDataContext _mongoDbDataContext;
+        private readonly TransformOptions _options;
+        private readonly ICollectionNameSelector _collectionNameSelector;
         private readonly IConnectionManager _connectionManager;
+        private readonly CancellationTokenSource _cancellationToken;
 
-        public DbTransformTask(SqlDatabase sourceSqlDatabase, 
-            IMongoDbDataContext mongoDbDataContext,
-            IConnectionManager connectionManager)
+        public List<DbTransformContext> DbTransformContexts { get; }
+
+        public DbTransformTask(TransformOptions options,
+            ICollectionNameSelector collectionNameSelector,
+            IConnectionManager connectionManager,
+            CancellationTokenSource cancellationToken)
         {
-            _sourceSqlDatabase = sourceSqlDatabase;
-            _mongoDbDataContext = mongoDbDataContext;
-            _connectionManager = connectionManager;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _collectionNameSelector = collectionNameSelector ?? throw new ArgumentNullException(nameof(collectionNameSelector));
+            _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
+            _cancellationToken = cancellationToken ?? throw new ArgumentNullException(nameof(cancellationToken));
+
+            var dataContextConfigurationAccessor = new DefaultDataContextConfigurationAccessor(options);
+            _sourceSqlDatabase = new SqlDatabase(dataContextConfigurationAccessor);
+            _mongoDbDataContext = new MongoDbContext(dataContextConfigurationAccessor, _collectionNameSelector, null);
+
+            DbTransformContexts = options.CreateTransformContexts(_cancellationToken);
         }
 
         private long GetCount(DbTransformContext context)
@@ -116,9 +132,12 @@ namespace DataTransform.Api.Hosting
             await _connectionManager.WsLogAsync(string.Format("Transformed total records: {0} time elapsed: {1}", totalRecords, sw.Elapsed));
         }
 
-        public async Task InvokeAsync(DbTransformContext context)
+        public async Task InvokeAsync()
         {
-            await InvokeInternal(context);
+            foreach (var context in DbTransformContexts)
+            {
+                await InvokeInternal(context);
+            }
         }
     }
 }
