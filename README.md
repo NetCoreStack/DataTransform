@@ -2,7 +2,7 @@
 
 NetCoreStack DataTransform is a tool for application developers, data analysts and database administrators to transform and collect various data type from different SQL providers to MongoDb database.
 
-![](https://github.com/netcorestack/datatransform/blob/master/datatransform.png)
+![](https://github.com/NetCoreStack/DataTransform/blob/master/DataTransform.png)
 
 [Watch the video](https://www.youtube.com/watch?v=4Vah4gRteaI)
 
