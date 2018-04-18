@@ -67,8 +67,6 @@ namespace DataTransform.Api.Hosting
                     break;
                 }
 
-                await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} counts: {context.Count} record(s) processing...");
-
                 var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} " +
                     $"WHERE {identityColumnName} > {indexId} ORDER BY {identityColumnName} ASC";
 
