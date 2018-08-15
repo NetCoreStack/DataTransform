@@ -5,9 +5,9 @@ namespace DataTransform.Api.Hosting
 {
     public class TransformOptions : IOptions<TransformOptions>
     {
-        public string SqlConnectionString { get; set; }
+        public string SourceConnectionString { get; set; }
 
-        public string MongoDbConnectionString { get; set; }
+        public string TargetConnectionString { get; set; }
 
         // case insensitive index 
         // https://docs.mongodb.com/manual/core/index-case-insensitive/

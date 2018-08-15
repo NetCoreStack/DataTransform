@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using NetCoreStack.Data;
 using NetCoreStack.WebSockets;
+using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Threading;
 
@@ -12,18 +13,47 @@ namespace DataTransform.Api.Hosting
     {
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IConnectionManager _connectionManager;
-        private readonly ICollectionNameSelector _collectionNameSelector;
 
-        public TransformTaskFactory(IHostingEnvironment hostingEnvironment, 
-            IConnectionManager connectionManager, 
-            ICollectionNameSelector collectionNameSelector)
+        public TransformTaskFactory(IHostingEnvironment hostingEnvironment, IConnectionManager connectionManager)
         {
             _hostingEnvironment = hostingEnvironment;
             _connectionManager = connectionManager;
-            _collectionNameSelector = collectionNameSelector;
         }
 
-        public List<ITransformTask> Create(string[] files, CancellationTokenSource cancellationToken)
+        private ITransformTask CreateTask(TransformOptions options, CancellationToken cancellationToken)
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            if (string.IsNullOrEmpty(options.SourceConnectionString))
+            {
+                throw new ArgumentNullException(nameof(options.SourceConnectionString));
+            }
+
+            if (string.IsNullOrEmpty(options.TargetConnectionString))
+            {
+                throw new ArgumentNullException(nameof(options.TargetConnectionString));
+            }
+
+            if (options.TargetConnectionString.StartsWith("mongodb"))
+            {
+                return new MongoDbTransformTask(options, _connectionManager, cancellationToken);
+            }
+
+            try
+            {
+                var builder = new SqlConnectionStringBuilder(options.TargetConnectionString);
+                return new SqlTransformTask(options, _connectionManager, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public List<ITransformTask> Create(string[] files, CancellationToken cancellationToken)
         {
             List<ITransformTask> taskList = new List<ITransformTask>();
             foreach (var file in files)
@@ -38,7 +68,8 @@ namespace DataTransform.Api.Hosting
                 var options = new TransformOptions();
                 configuration.Bind(nameof(TransformOptions), options);
 
-                taskList.Add(new DbTransformTask(options, _collectionNameSelector, _connectionManager, cancellationToken));
+                taskList.Add(CreateTask(options, cancellationToken));
+
             }
 
             return taskList;

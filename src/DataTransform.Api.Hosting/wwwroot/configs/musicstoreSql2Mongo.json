@@ -1,7 +1,7 @@
 {
   "TransformOptions": {
-    "SqlConnectionString": "Server=localhost,1401;Database=MusicStore;User ID=sa;Password=P@ssword1;MultipleActiveResultSets=true",
-    "MongoDbConnectionString": "mongodb://localhost:27017/MusicStore",
+    "SourceConnectionString": "Server=.;Database=MusicStore;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "TargetConnectionString": "mongodb://localhost:27017/MusicStore",
     "Maps": [
       {
         "TableName": "dbo.Albums",

@@ -12,10 +12,6 @@ namespace DataTransform.Api.Hosting
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((context, builder) =>
-            {
-                // builder.AddTransformConfigFile(context.HostingEnvironment);
-
-            }).UseStartup<Startup>().Build();
+            .UseStartup<Startup>().Build();
     }
 }

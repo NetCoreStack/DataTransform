@@ -1,6 +1,6 @@
-### SQL to MongoDb Transform Tool
+### SQL to SQL or SQL to MongoDb Transform Tool
 
-NetCoreStack DataTransform is a tool for application developers, data analysts and database administrators to transform and collect various data type from different SQL providers to MongoDb database.
+NetCoreStack DataTransform is a tool for application developers, data analysts and database administrators to transform and collect various data type from different SQL providers to SQL or MongoDb database.
 
 ![](https://github.com/NetCoreStack/DataTransform/blob/master/DataTransform.png)
 
@@ -26,4 +26,4 @@ Use Docker to get SQL Server and MongoDb running instances.
 
     docker run -p 1401:1433 --name sql1 -d localsql
 
-when above commands are completed you can run **afterdockerbuild** file to retore the sample MusicStore database for running SQL Server 2017 instance.
+once above commands are completed you can run **afterdockerbuild** file to retore the sample MusicStore database for running SQL Server 2017 instance.

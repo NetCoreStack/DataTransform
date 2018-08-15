@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using NetCoreStack.Data;
 
 namespace DataTransform.Api.Hosting
 {
@@ -10,10 +8,7 @@ namespace DataTransform.Api.Hosting
         {
             services.AddOptions();
 
-            services.TryAddSingleton<ICollectionNameSelector, DefaultCollectionNameSelector>();
-
             services.AddSingleton<TransformTaskFactory>();
-
             services.AddSingleton<TransformManager>();
         }
     }

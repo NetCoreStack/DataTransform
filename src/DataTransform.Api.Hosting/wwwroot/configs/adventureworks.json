@@ -1,6 +1,6 @@
 {
   "TransformOptions": {
-    "SqlConnectionString": "Server=localhost,1401;Database=AdventureWorks2016;User ID=sa;Password=P@ssword1;MultipleActiveResultSets=true",
+    "SourceConnectionString": "Server=localhost,1401;Database=AdventureWorks2016;User ID=sa;Password=P@ssword1;MultipleActiveResultSets=true",
     "MongoDbConnectionString": "mongodb://localhost:27017/AdventureWorks",
     "Maps": [
       {

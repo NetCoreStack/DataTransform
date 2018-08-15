@@ -1,5 +1,3 @@
-using System;
-
 namespace DataTransform.Api.Hosting
 {
     public class ErrorViewModel

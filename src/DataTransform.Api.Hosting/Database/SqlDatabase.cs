@@ -1,5 +1,4 @@
-﻿using NetCoreStack.Data.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -8,12 +7,11 @@ namespace DataTransform.Api.Hosting
 {
     public class SqlDatabase
     {
-        protected IDataContextConfigurationAccessor DataContextConfigurationAccessor { get; }
-        protected string ConnectionString => DataContextConfigurationAccessor.SqlConnectionString;
+        protected string ConnectionString { get; }
 
-        public SqlDatabase(IDataContextConfigurationAccessor configurationAccessor)
+        public SqlDatabase(string connectionString)
         {
-            DataContextConfigurationAccessor = configurationAccessor ?? throw new ArgumentNullException(nameof(configurationAccessor));
+            ConnectionString = connectionString;
         }
 
         public SqlConnection CreateConnection()

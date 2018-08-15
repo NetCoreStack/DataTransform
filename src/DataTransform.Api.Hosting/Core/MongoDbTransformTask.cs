@@ -1,9 +1,6 @@
 ﻿using Dapper;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using NetCoreStack.Data;
-using NetCoreStack.Data.Context;
-using NetCoreStack.Data.Interfaces;
 using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
@@ -14,35 +11,29 @@ using System.Threading.Tasks;
 
 namespace DataTransform.Api.Hosting
 {
-    public class DbTransformTask : ITransformTask
+    public class MongoDbTransformTask : ITransformTask
     {
         private readonly SqlDatabase _sourceSqlDatabase;
-        private readonly IMongoDbDataContext _mongoDbDataContext;
+        private readonly MongoDbContext _mongoDbDataContext;
         private readonly TransformOptions _options;
-        private readonly ICollectionNameSelector _collectionNameSelector;
         private readonly IConnectionManager _connectionManager;
-        private readonly CancellationTokenSource _cancellationToken;
+        private readonly CancellationToken _cancellationToken;
 
-        public List<DbTransformContext> DbTransformContexts { get; }
+        public List<MongoDbTransformContext> DbTransformContexts { get; }
 
-        public DbTransformTask(TransformOptions options,
-            ICollectionNameSelector collectionNameSelector,
-            IConnectionManager connectionManager,
-            CancellationTokenSource cancellationToken)
+        public MongoDbTransformTask(TransformOptions options, IConnectionManager connectionManager, CancellationToken cancellationToken)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _collectionNameSelector = collectionNameSelector ?? throw new ArgumentNullException(nameof(collectionNameSelector));
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
-            _cancellationToken = cancellationToken ?? throw new ArgumentNullException(nameof(cancellationToken));
+            _cancellationToken = cancellationToken;
 
-            var dataContextConfigurationAccessor = new DefaultDataContextConfigurationAccessor(options);
-            _sourceSqlDatabase = new SqlDatabase(dataContextConfigurationAccessor);
-            _mongoDbDataContext = new MongoDbContext(dataContextConfigurationAccessor, _collectionNameSelector, null);
+            _sourceSqlDatabase = new SqlDatabase(options.SourceConnectionString);
+            _mongoDbDataContext = new MongoDbContext(options.TargetConnectionString);
 
-            DbTransformContexts = options.CreateTransformContexts(_cancellationToken);
+            DbTransformContexts = options.CreateMongoDbTransformContexts(_cancellationToken);
         }
 
-        private long GetCount(DbTransformContext context)
+        private long GetCount(MongoDbTransformContext context)
         {
             List<dynamic> sqlItems = new List<dynamic>();
             using (var connection = _sourceSqlDatabase.CreateConnection())
@@ -51,7 +42,7 @@ namespace DataTransform.Api.Hosting
             }
         }
 
-        private async Task<int> TokenizeLoopAsync(DbTransformContext context)
+        private async Task<int> TokenizeLoopAsync(MongoDbTransformContext context)
         {
             int take = context.BundleSize;
             object indexId = context.LastIndexId;
@@ -62,7 +53,7 @@ namespace DataTransform.Api.Hosting
 
             do
             {
-                if (context.CancellationTokenSource.IsCancellationRequested)
+                if (context.CancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -91,7 +82,7 @@ namespace DataTransform.Api.Hosting
                         IsOrdered = false
                     });
 
-                    await _connectionManager.WsLogAsync($"SQL Table: {context.TableName} total: {totalIndices} record(s) progressed.");
+                    await _connectionManager.WsLogAsync($"Table: {context.TableName} total: {totalIndices} record(s) progressed.");
                 }
 
                 if (totalIndices == 0)

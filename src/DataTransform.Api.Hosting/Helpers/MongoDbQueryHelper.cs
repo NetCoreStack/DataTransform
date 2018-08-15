@@ -28,7 +28,7 @@ namespace DataTransform.Api.Hosting
             }
         }
 
-        public static object GetLatestId(this IMongoDatabase mongoDatabase, DbTransformContext context)
+        public static object GetLatestId(this IMongoDatabase mongoDatabase, MongoDbTransformContext context)
         {
             var collection = mongoDatabase.GetOrCreateCollection(context.CollectionName, context.Collation);
             var sortBuilder = Builders<BsonDocument>.Sort;

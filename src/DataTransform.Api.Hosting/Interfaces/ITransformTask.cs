@@ -5,8 +5,6 @@ namespace DataTransform.Api.Hosting
 {
     public interface ITransformTask
     {
-        List<DbTransformContext> DbTransformContexts { get; }
-
         Task InvokeAsync();
     }
 }

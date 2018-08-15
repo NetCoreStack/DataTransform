@@ -1,0 +1,18 @@
+{
+  "TransformOptions": {
+    "SourceConnectionString": "Server=.;Database=MusicStore;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "TargetConnectionString": "Server=.;Database=MusicStoreTransform;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "Maps": [
+      {
+        "TableName": "dbo.Albums",
+        "IdentityColumnName": "AlbumId",
+        "Fields": []
+      },
+      {
+        "TableName": "dbo.Artists",
+        "IdentityColumnName": "ArtistId",
+        "Fields": []
+      }
+    ]
+  }
+}

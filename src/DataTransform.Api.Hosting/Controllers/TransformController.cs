@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataTransform.Api.Hosting.Controllers
@@ -141,7 +142,7 @@ namespace DataTransform.Api.Hosting.Controllers
             var transformManager = HttpContext.RequestServices.GetRequiredService<TransformManager>();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Factory.StartNew(async () => await transformManager.TransformAsync(files), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(async () => await transformManager.TransformAsync(files, CancellationToken.None), TaskCreationOptions.LongRunning);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             await Task.CompletedTask;
