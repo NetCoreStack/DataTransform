@@ -6,7 +6,7 @@ using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -57,7 +57,7 @@ namespace DataTransform.Api.Hosting
             bool allFields = fields.Contains("*");
 
             DataTable dataTable = new DataTable();
-            using (var connection = _sourceSqlDatabase.CreateConnection())
+            using (SqlConnection connection = _sourceSqlDatabase.CreateConnection())
             {
                 string targetDatabaseName = _targetSqlConnectionBuilder.InitialCatalog;
                 Server server = new Server(new ServerConnection(connection));

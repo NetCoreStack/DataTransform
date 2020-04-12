@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
+using Microsoft.SqlServer.Types;
 using System;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
+using System.Drawing;
 
 namespace DataTransform.Api.Hosting
 {
@@ -146,6 +148,9 @@ namespace DataTransform.Api.Hosting
 
                 case SqlDataType.DateTimeOffset:
                     return typeof(DateTimeOffset);
+
+                case SqlDataType.Geometry:
+                    return typeof(SqlGeometry);
 
                 default:
                     throw new ArgumentOutOfRangeException("sqlType");
