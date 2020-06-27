@@ -16,12 +16,12 @@ namespace DataTransform.Api.Hosting
                 fieldsPattern = "*";
             }
 
-            return string.Format("SELECT {0} FROM {1}", fieldsPattern, descriptor.TableName);
+            return string.Format("SELECT {0} FROM {1}", fieldsPattern, descriptor.SqlTableNameDialect());
         }
 
         public static string CreateCountScript(this TransformDescriptor descriptor)
         {
-            return string.Format("SELECT COUNT(*) FROM {0} WHERE {1} > 0", descriptor.TableName, descriptor.IdentityColumnName);
+            return string.Format("SELECT COUNT(*) FROM {0} WHERE {1} > 0", descriptor.SqlTableNameDialect(), descriptor.IdentityColumnName);
         }
     }
 }

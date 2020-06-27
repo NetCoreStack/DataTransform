@@ -2,9 +2,8 @@
 
 namespace DataTransform.Api.Hosting
 {
-    public class TransformDescriptor
+    public class TransformDescriptor : TableNameDialect
     {
-        public string TableName { get; set; }
         public string IdentityColumnName { get; set; }
         public string CollectionName { get; set; }
         public IEnumerable<long> Range { get; set; }

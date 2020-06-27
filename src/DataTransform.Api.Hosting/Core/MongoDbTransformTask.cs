@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using NetCoreStack.WebSockets;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace DataTransform.Api.Hosting
 {
     public class MongoDbTransformTask : ITransformTask
     {
-        private readonly SqlDatabase _sourceSqlDatabase;
+        private readonly DbConnectionFactory<SqlConnection> _sourceSqlDatabase;
         private readonly MongoDbContext _mongoDbDataContext;
         private readonly TransformOptions _options;
         private readonly IConnectionManager _connectionManager;
@@ -27,7 +28,7 @@ namespace DataTransform.Api.Hosting
             _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             _cancellationToken = cancellationToken;
 
-            _sourceSqlDatabase = new SqlDatabase(options.SourceConnectionString);
+            _sourceSqlDatabase = new DbConnectionFactory<SqlConnection>(options.SourceConnectionString);
             _mongoDbDataContext = new MongoDbContext(options.TargetConnectionString);
 
             DbTransformContexts = options.CreateMongoDbTransformContexts(_cancellationToken);
@@ -58,7 +59,7 @@ namespace DataTransform.Api.Hosting
                     break;
                 }
 
-                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.TableName} " +
+                var predicateSql = $"SELECT TOP {take} {context.FieldPattern} FROM {context.SqlTableNameDialect()} " +
                     $"WHERE {identityColumnName} > {indexId} ORDER BY {identityColumnName} ASC";
 
                 List<dynamic> sqlItems = new List<dynamic>();
