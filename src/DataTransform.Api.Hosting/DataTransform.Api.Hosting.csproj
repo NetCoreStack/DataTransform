@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
     <PackageReference Include="NetCoreStack.Contracts" Version="3.0.0" />
     <PackageReference Include="NetCoreStack.WebSockets" Version="2.5.2" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
